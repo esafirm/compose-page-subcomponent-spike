@@ -6,7 +6,6 @@ import dagger.BindsInstance
 import dagger.Component
 import dagger.Module
 import dagger.Provides
-import example.compose.pager.PageSubComponent
 
 /**
  * A simple Dagger component component
@@ -16,8 +15,6 @@ import example.compose.pager.PageSubComponent
     modules = [GenericModule::class]
 )
 interface AppComponent {
-
-    fun pageComponentFactory(): PageSubComponent.Factory
 
     @Component.Factory
     interface Factory {

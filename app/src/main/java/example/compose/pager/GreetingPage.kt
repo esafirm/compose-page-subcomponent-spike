@@ -14,12 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.squareup.anvil.annotations.ContributesBinding
-import com.squareup.anvil.annotations.ContributesTo
-import dagger.Binds
-import dagger.Module
-import dagger.Provides
-import dagger.multibindings.ClassKey
-import dagger.multibindings.IntoMap
 import example.compose.AppScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -75,7 +69,9 @@ class GreetingViewModel @Inject constructor(
 /* > Page */
 /* --------------------------------------------------- */
 
-class GreetingPage : CommonPage() {
+@ContributesBinding(AppScope::class, boundType = Page::class)
+@Named("GreetingPage")
+class GreetingPage @Inject constructor() : CommonPage() {
     @Composable
     override fun Content() {
         val vm = rememberHostLifecycleViewModel<GreetingViewModel>()
@@ -98,34 +94,4 @@ class GreetingPage : CommonPage() {
             }
         }
     }
-}
-
-/* --------------------------------------------------- */
-/* > DI */
-/* --------------------------------------------------- */
-
-@ContributesTo(AppScope::class)
-@Module
-interface GreetingPageModule {
-
-    companion object {
-
-        @Provides
-        @Named("GreetingPage")
-        fun greetingPage(): Page = GreetingPage()
-    }
-}
-
-/**
- * We're using this for now
- * because using Any::class as `boundType` resulting a compile error in Anvil
- */
-@ContributesTo(PageScope::class)
-@Module
-interface PageVmModule {
-
-    @Binds
-    @IntoMap
-    @ClassKey(GreetingViewModel::class)
-    fun bindViewModel(impl: GreetingViewModel): Any
 }
