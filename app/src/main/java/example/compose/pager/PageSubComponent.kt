@@ -34,6 +34,8 @@ interface PageSubComponent {
 
 @ContributesTo(PageScope::class)
 interface PageVmFactoryProvider {
+
+    @Reusable
     fun getFactory(): PageVmFactory
 }
 
@@ -41,7 +43,6 @@ interface PageVmFactoryProvider {
 @Module
 class PageActivityResultCallerModule {
 
-    @Named("PageCaller")
     @Reusable
     @Provides
     fun provideActivityResultCaller(

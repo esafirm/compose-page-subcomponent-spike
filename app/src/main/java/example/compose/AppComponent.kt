@@ -1,7 +1,6 @@
 package example.compose
 
 import androidx.activity.ComponentActivity
-import androidx.activity.result.ActivityResultCaller
 import com.squareup.anvil.annotations.MergeComponent
 import dagger.BindsInstance
 import dagger.Component
@@ -14,7 +13,7 @@ import example.compose.pager.PageSubComponent
  */
 @MergeComponent(
     scope = AppScope::class,
-    modules = [GenericModule::class, ActivityHostModule::class]
+    modules = [GenericModule::class]
 )
 interface AppComponent {
 
@@ -33,15 +32,6 @@ interface AppComponent {
 class GenericModule {
     @Provides
     fun provideActivity(activity: MainActivity): ComponentActivity = activity
-}
-
-/**
- * Default dependencies for host
- */
-@Module
-class ActivityHostModule {
-    @Provides
-    fun provideResultCaller(activity: ComponentActivity): ActivityResultCaller = activity
 }
 
 interface AppScope

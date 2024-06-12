@@ -38,8 +38,8 @@ class GreetingDisplayer @Inject constructor() {
 class GreetingViewModel @Inject constructor(
     private val generator: GreetingGenerator,
     private val displayer: GreetingDisplayer,
-    @Named("PageCaller") caller: ActivityResultCaller,
     private val scope: CoroutineScope,
+    caller: ActivityResultCaller,
 ) {
 
     private val launcher =
@@ -78,7 +78,7 @@ class GreetingViewModel @Inject constructor(
 class GreetingPage : CommonPage() {
     @Composable
     override fun Content() {
-        val vm = rememberViewModel<GreetingViewModel>()
+        val vm = rememberHostLifecycleViewModel<GreetingViewModel>()
         vm.greet()
 
         Column(
@@ -88,7 +88,7 @@ class GreetingPage : CommonPage() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(text = "Check your Logcat!")
+            Text(text = "Greeting Page #1")
 
             Button(onClick = vm::takePicture) {
                 Text(text = "Take Picture")

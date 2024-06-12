@@ -19,6 +19,7 @@ class MainActivity : ComponentActivity() {
 
         val pages = listOf(
             mainDependencies.greetingPage,
+            mainDependencies.anotherGreetingPage,
             mainDependencies.sPageFirst,
             mainDependencies.sPageSecond
         )
@@ -37,5 +38,6 @@ interface MainDepsProvider {
 class MainDependencies @Inject constructor(
     @Named("GreetingPage") val greetingPage: Page,
     @Named("SimplePageFirst") val sPageFirst: Page,
-    @Named("SimplePageSecond") val sPageSecond: Page
+    @Named("SimplePageSecond") val sPageSecond: Page,
+    @Named("AnotherGreeting") val anotherGreetingPage: Page,
 )

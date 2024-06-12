@@ -18,7 +18,7 @@ class ComposeLifecycleOwner : LifecycleOwner {
 }
 
 @Composable
-fun rememberLifecycleOwner(): ComposeLifecycleOwner {
+fun rememberComposeLifecycleOwner(): ComposeLifecycleOwner {
     val lifecycleOwner = remember {
         ComposeLifecycleOwner().apply {
             moveToState(Lifecycle.State.INITIALIZED)

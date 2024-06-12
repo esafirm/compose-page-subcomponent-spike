@@ -4,6 +4,7 @@ import com.squareup.anvil.annotations.ContributesTo
 import dagger.BindsInstance
 import dagger.MembersInjector
 import example.compose.AppComponent
+import example.compose.AppScope
 
 interface AnvilAndroidInjector<T> {
 
@@ -18,7 +19,7 @@ interface AnvilAndroidInjector<T> {
     }
 }
 
-@ContributesTo(AppComponent::class)
+@ContributesTo(AppScope::class)
 interface AnvilAndroidInjectorProvider {
     fun dispatchingAnvilInjector(): DispatchingAnvilInjector
 }
