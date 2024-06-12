@@ -10,13 +10,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.squareup.anvil.annotations.ContributesBinding
+import com.squareup.anvil.annotations.ContributesTo
+import dagger.Module
+import dagger.Provides
 import example.compose.AppScope
+import example.compose.MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Named
@@ -33,6 +40,9 @@ class GreetingViewModel @Inject constructor(
     private val generator: GreetingGenerator,
     private val displayer: GreetingDisplayer,
     private val scope: CoroutineScope,
+
+    val searchFlow: StateFlow<String>,
+
     caller: ActivityResultCaller,
 ) {
 
@@ -69,9 +79,12 @@ class GreetingViewModel @Inject constructor(
 /* > Page */
 /* --------------------------------------------------- */
 
-@ContributesBinding(AppScope::class, boundType = Page::class)
+@ContributesBinding(MainActivity::class, boundType = Page::class)
 @Named("GreetingPage")
-class GreetingPage @Inject constructor() : CommonPage() {
+class GreetingPage @Inject constructor(
+    internal val searchFlow: StateFlow<String>,
+) : CommonPage() {
+
     @Composable
     override fun Content() {
         val vm = rememberHostLifecycleViewModel<GreetingViewModel>()
@@ -92,6 +105,17 @@ class GreetingPage @Inject constructor() : CommonPage() {
             Button(onClick = vm::callLongTask) {
                 Text(text = "Call Long Task")
             }
+
+            val searchText by vm.searchFlow.collectAsState()
+            Text(text = "Search: $searchText")
         }
     }
+}
+
+@ContributesTo(GreetingPage::class)
+@Module
+class GreetingPageModule {
+
+    @Provides
+    fun provideSearchFlow(page: GreetingPage) = page.searchFlow
 }

@@ -1,4 +1,4 @@
-package example.compose.pager
+package example.compose.pager.blocks
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect

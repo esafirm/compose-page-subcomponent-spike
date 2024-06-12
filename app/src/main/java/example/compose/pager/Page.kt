@@ -1,5 +1,6 @@
 package example.compose.pager
 
+import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -7,6 +8,11 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import example.compose.AppComponentInstance
+import example.compose.pager.blocks.IncrementalIdProvider
+import example.compose.pager.blocks.SimpleResultLauncherRegistry
+import example.compose.pager.blocks.rememberComposeLifecycleOwner
+import example.compose.pager.di.PageVmProvider
+import example.compose.pager.di.PageVmProviderFactoryStoreProvider
 import java.util.UUID
 
 interface Page {
@@ -20,9 +26,7 @@ abstract class CommonPage : Page {
     // That means it will match the composable lifecycle
     @Composable
     protected fun <T : Any> rememberViewModel(): T {
-        val pageVmProvider = rememberPageVmProvider<T>(
-            pageClass = this.javaClass
-        )
+        val pageVmProvider = rememberPageVmProvider<T>(this)
         return remember { pageVmProvider.getPageVm() }
     }
 
@@ -36,7 +40,7 @@ abstract class CommonPage : Page {
         return getOrCreatePageVm(
             pageId = pageId,
             hostLifecycleOwner = lifecycleOwner,
-            pageClass = this.javaClass,
+            page = this,
         )
     }
 
@@ -49,12 +53,16 @@ abstract class CommonPage : Page {
      * Get or create a [PageVmProvider] that has a lifecycle matching with host
      */
     private fun <VM : Any> getOrCreatePageVm(
+        page: CommonPage,
         pageId: String,
         hostLifecycleOwner: LifecycleOwner,
-        pageClass: Class<*>,
     ): VM {
         if (vmProviderHolder == null) {
-            vmProviderHolder = createPageVmProvider<VM>(pageClass, pageId, hostLifecycleOwner) {
+            vmProviderHolder = createPageVmProvider<VM>(
+                page = page,
+                pageId = pageId,
+                hostLifecycleOwner = hostLifecycleOwner,
+            ) {
                 vmProviderHolder = null
             }
         }
@@ -78,17 +86,18 @@ fun rememberPageId(): String {
  * Remember a [PageVmProvider] that has a lifecycle matching with composable
  */
 @Composable
-fun <VM : Any> rememberPageVmProvider(pageClass: Class<*>): PageVmProvider<VM> {
+fun <VM : Any> rememberPageVmProvider(page: CommonPage): PageVmProvider<VM> {
     val pageId = rememberPageId()
     val lifecycleOwner = rememberComposeLifecycleOwner()
-    return remember { createPageVmProvider(pageClass, pageId, lifecycleOwner) }
+    return remember { createPageVmProvider(page, pageId, lifecycleOwner) }
 }
 
 /**
  * Create a [PageVmProvider] that has a lifecycle matching with host
  */
+@Suppress("UNCHECKED_CAST")
 internal fun <VM : Any> createPageVmProvider(
-    pageClass: Class<*>,
+    page: CommonPage,
     pageId: String,
     hostLifecycleOwner: LifecycleOwner,
     onHostDestroyed: (() -> Unit)? = null,
@@ -108,8 +117,13 @@ internal fun <VM : Any> createPageVmProvider(
     val idProvider = IncrementalIdProvider(pageId)
     val appComponent = AppComponentInstance.get()
 
-    val store = (appComponent as PageVmProviderStoreProvider).pageVmProviderStore()
-    val vmProvider = store[pageClass]?.create(
+    val pageClass = page.javaClass
+    val store = (appComponent as PageVmProviderFactoryStoreProvider).pageVmProviderFactoryStore()
+
+    val factory = store[pageClass] as? PageVmProvider.Factory<CommonPage>
+    val vmProvider = factory?.create(
+        page = page,
+        activity = hostLifecycleOwner as ComponentActivity,
         idProvider = idProvider,
         registry = callerRegistry,
         lifecycleOwner = hostLifecycleOwner

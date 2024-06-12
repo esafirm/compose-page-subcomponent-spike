@@ -1,37 +1,19 @@
 package example.compose
 
-import androidx.activity.ComponentActivity
 import com.squareup.anvil.annotations.MergeComponent
-import dagger.BindsInstance
-import dagger.Component
-import dagger.Module
-import dagger.Provides
+
+/**
+ * Marker scope for App wide component
+ */
+interface AppScope
 
 /**
  * A simple Dagger component component
  */
-@MergeComponent(
-    scope = AppScope::class,
-    modules = [GenericModule::class]
-)
+@MergeComponent(AppScope::class)
 interface AppComponent {
-
-    @Component.Factory
-    interface Factory {
-        fun create(@BindsInstance activity: MainActivity): AppComponent
-    }
+    fun activitySubComponentFactory(): MainActivitySubComponent.Factory
 }
-
-/**
- * A module that convert the bounded activity to a generic [ComponentActivity]
- */
-@Module
-class GenericModule {
-    @Provides
-    fun provideActivity(activity: MainActivity): ComponentActivity = activity
-}
-
-interface AppScope
 
 /**
  * A singleton object that holds the AppComponent instance
@@ -40,17 +22,9 @@ object AppComponentInstance {
 
     private var appComponent: AppComponent? = null
 
-    fun create(activity: MainActivity): AppComponent {
-        if (appComponent != null) {
-            println("AppComponent:: replacing existing component")
-        }
-        appComponent = DaggerAppComponent.factory().create(activity)
-        return appComponent!!
-    }
-
     fun get(): AppComponent {
         if (appComponent == null) {
-            error("AppComponent is not initialized. Call create() first.")
+            appComponent = DaggerAppComponent.create()
         }
         return appComponent!!
     }

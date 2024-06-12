@@ -1,4 +1,4 @@
-package example.compose.pager
+package example.compose.pager.blocks
 
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultCaller
