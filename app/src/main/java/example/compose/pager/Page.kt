@@ -30,8 +30,8 @@ abstract class CommonPage : Page {
     // But activity result caller will still function because we're using page id with `rememberSavable`
     @Composable
     protected fun <T : Any> rememberHostLifecycleViewModel(): T {
-        val pageId = rememberPageId()
         val lifecycleOwner = LocalLifecycleOwner.current
+        val pageId = rememberPageId()
 
         return getOrCreatePageVm(
             pageId = pageId,
@@ -39,12 +39,34 @@ abstract class CommonPage : Page {
             pageClass = this.javaClass,
         )
     }
+
+    /**
+     * A holder for [PageVmProvider] that will be created in [rememberHostLifecycleViewModel]
+     */
+    private var vmProviderHolder: PageVmProvider<*>? = null
+
+    /**
+     * Get or create a [PageVmProvider] that has a lifecycle matching with host
+     */
+    private fun <VM : Any> getOrCreatePageVm(
+        pageId: String,
+        hostLifecycleOwner: LifecycleOwner,
+        pageClass: Class<*>,
+    ): VM {
+        if (vmProviderHolder == null) {
+            vmProviderHolder = createPageVmProvider<VM>(pageClass, pageId, hostLifecycleOwner) {
+                vmProviderHolder = null
+            }
+        }
+        @Suppress("UNCHECKED_CAST")
+        return vmProviderHolder!!.getPageVm() as VM
+    }
+
 }
 
 /**
  * Remember a unique page id that survives configuration change
  *
- * This is currently used as a key in [pageVmStore] and also
  * the key for [androidx.activity.result.ActivityResultCaller] that used in [Page]
  */
 @Composable
@@ -60,33 +82,6 @@ fun <VM : Any> rememberPageVmProvider(pageClass: Class<*>): PageVmProvider<VM> {
     val pageId = rememberPageId()
     val lifecycleOwner = rememberComposeLifecycleOwner()
     return remember { createPageVmProvider(pageClass, pageId, lifecycleOwner) }
-}
-
-/**
- * A simple map that store the [PageVmProvider] with a key from [rememberPageId]
- */
-internal val pageVmStore: MutableMap<String, PageVmProvider<*>> = mutableMapOf()
-
-/**
- * Get or create a [PageVmProvider] that has a lifecycle matching with host
- *
- * It will check [pageVmStore] first, if it's not found, it will create a new one
- * and store it in [pageVmStore]. The key will be the [pageId]
- */
-fun <VM : Any> getOrCreatePageVm(
-    pageId: String,
-    hostLifecycleOwner: LifecycleOwner,
-    pageClass: Class<*>,
-): VM {
-    if (pageVmStore[pageId] == null) {
-        val pageVmFactory = createPageVmProvider<VM>(pageClass, pageId, hostLifecycleOwner) {
-            pageVmStore.remove(pageId)
-        }
-        pageVmStore[pageId] = pageVmFactory
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    return pageVmStore[pageId]!!.getPageVm() as VM
 }
 
 /**
