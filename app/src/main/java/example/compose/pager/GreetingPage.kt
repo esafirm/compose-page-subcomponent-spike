@@ -28,57 +28,12 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Named
 
-class GreetingGenerator @Inject constructor() {
-    fun generate(): String = "Hello World"
-}
-
-class GreetingDisplayer @Inject constructor() {
-    fun displayGreeting(greeting: String) = println(greeting)
-}
-
-class GreetingViewModel @Inject constructor(
-    private val generator: GreetingGenerator,
-    private val displayer: GreetingDisplayer,
-    private val scope: CoroutineScope,
-
-    val searchFlow: StateFlow<String>,
-
-    caller: ActivityResultCaller,
-) {
-
-    private val launcher =
-        caller.registerForActivityResult(ActivityResultContracts.TakePicturePreview()) {
-            println("VM:: take picture result: ${it.hashCode()}")
-        }
-
-    init {
-        println("This is initiated ")
-    }
-
-    fun greet() {
-        displayer.displayGreeting(generator.generate())
-    }
-
-    fun takePicture() {
-        launcher.launch()
-    }
-
-    fun callLongTask(delayInMs: Long = 10_000L) {
-        val job = scope.launch {
-            println("VM:: Long task started - delay: $delayInMs")
-            delay(delayInMs)
-            println("VM:: Long task completed inside launch")
-        }
-        job.invokeOnCompletion { cause ->
-            println("VM:: Long task completed cause: $cause")
-        }
-    }
-}
-
-/* --------------------------------------------------- */
-/* > Page */
-/* --------------------------------------------------- */
-
+/**
+ * [GreetingPage] and its member like [searchFlow] in its constructor, is part of the host component
+ * [MainActivity] and its lifecycle is managed by the host component.
+ *
+ * While the view model [GreetingViewModel] and its member belongs to the page sub-component
+ */
 @ContributesBinding(MainActivity::class, boundType = Page::class)
 @Named("GreetingPage")
 class GreetingPage @Inject constructor(
@@ -112,10 +67,64 @@ class GreetingPage @Inject constructor(
     }
 }
 
+/**
+ * A module to bridge parent component and child component
+ */
 @ContributesTo(GreetingPage::class)
 @Module
 class GreetingPageModule {
 
     @Provides
     fun provideSearchFlow(page: GreetingPage) = page.searchFlow
+}
+
+/* --------------------------------------------------- */
+/* > View Model and Its Dependencies */
+/* --------------------------------------------------- */
+
+class GreetingViewModel @Inject constructor(
+    private val generator: GreetingGenerator,
+    private val displayer: GreetingDisplayer,
+    private val scope: CoroutineScope,
+
+    val searchFlow: StateFlow<String>,
+
+    caller: ActivityResultCaller,
+) {
+
+    private val launcher =
+        caller.registerForActivityResult(ActivityResultContracts.TakePicturePreview()) {
+            println("VM:: take picture result: ${it.hashCode()}")
+        }
+
+    init {
+        println("VM:: GreetingViewModel initiated")
+    }
+
+    fun greet() {
+        displayer.displayGreeting(generator.generate())
+    }
+
+    fun takePicture() {
+        launcher.launch()
+    }
+
+    fun callLongTask(delayInMs: Long = 10_000L) {
+        val job = scope.launch {
+            println("VM:: Long task started - delay: $delayInMs")
+            delay(delayInMs)
+            println("VM:: Long task completed inside launch")
+        }
+        job.invokeOnCompletion { cause ->
+            println("VM:: Long task completed cause: $cause")
+        }
+    }
+}
+
+class GreetingGenerator @Inject constructor() {
+    fun generate(): String = "Hello World"
+}
+
+class GreetingDisplayer @Inject constructor() {
+    fun displayGreeting(greeting: String) = println(greeting)
 }

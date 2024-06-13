@@ -61,10 +61,15 @@ interface PageVmProvider<VM : Any> {
  * Subcomponent implementation for [GreetingPage]
  *
  * TODO: solve the problem below:
- * For now [PageVmProvider] still need the ViewModel type info to work
- * The option for now are:
+ *
+ * For now [PageVmProvider] still need the ViewModel type info to work.
+ *
+ * For example: `PageVmProvider<GreetingViewModel>`
+ *
+ * Options for now are:
  * 1. Declare the type in [example.compose.pager.CommonPage]. Ex: CommonPage<VM>.
  * 2. Declare special annotation in the view model itself that later will be processed by anvil extension.
+ * 3. Ignore VM type completely. This could work but it will be remove the compile-time safety (?)
  */
 @MergeSubcomponent(
     scope = GreetingPage::class,

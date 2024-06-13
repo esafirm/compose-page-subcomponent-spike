@@ -36,10 +36,14 @@ class ComposePageActivityResultCaller(
 /* > Id Provider */
 /* --------------------------------------------------- */
 
+/**
+ * An ID provider that will be used by [ActivityResultCaller]
+ */
 class IncrementalIdProvider(
     private val prefixIdentifier: String
 ) : ResultCallerIdProvider {
 
+    // This implementation is similar like the Component activity did internally
     private val nextLocalRequestCode = AtomicInteger()
 
     override fun nextId(): String {

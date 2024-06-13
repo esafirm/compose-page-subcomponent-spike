@@ -6,14 +6,9 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.squareup.anvil.annotations.ContributesTo
-import com.squareup.anvil.annotations.MergeSubcomponent
-import dagger.Module
-import dagger.Provides
-import dagger.Reusable
 import example.compose.pager.Page
 import example.compose.pager.PagerSample
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 import javax.inject.Named
 
