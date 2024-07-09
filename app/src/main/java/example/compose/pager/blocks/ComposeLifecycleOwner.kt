@@ -26,7 +26,6 @@ fun rememberComposeLifecycleOwner(): ComposeLifecycleOwner {
     }
 
     DisposableEffect(Unit) {
-        lifecycleOwner.moveToState(Lifecycle.State.STARTED)
         lifecycleOwner.moveToState(Lifecycle.State.RESUMED)
         onDispose {
             lifecycleOwner.moveToState(Lifecycle.State.DESTROYED)

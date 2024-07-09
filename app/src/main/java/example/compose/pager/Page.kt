@@ -4,6 +4,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -47,7 +48,7 @@ abstract class CommonPage : Page {
     /**
      * A holder for [PageVmProvider] that will be created in [rememberHostLifecycleViewModel]
      */
-    private var vmProviderHolder: PageVmProvider<*>? = null
+    private var vmHolder: Any? = null
 
     /**
      * Get or create a [PageVmProvider] that has a lifecycle matching with host
@@ -57,17 +58,19 @@ abstract class CommonPage : Page {
         pageId: String,
         hostLifecycleOwner: LifecycleOwner,
     ): VM {
-        if (vmProviderHolder == null) {
-            vmProviderHolder = createPageVmProvider<VM>(
+        if (vmHolder == null) {
+            val pageVmProvider = createPageVmProvider<VM>(
                 page = page,
                 pageId = pageId,
-                hostLifecycleOwner = hostLifecycleOwner,
+                host = hostLifecycleOwner as ComponentActivity,
+                lifecycleOwner = hostLifecycleOwner,
             ) {
-                vmProviderHolder = null
+                vmHolder = null
             }
+            vmHolder = pageVmProvider.getPageVm()
         }
         @Suppress("UNCHECKED_CAST")
-        return vmProviderHolder!!.getPageVm() as VM
+        return vmHolder as VM
     }
 
 }
@@ -89,7 +92,15 @@ fun rememberPageId(): String {
 fun <VM : Any> rememberPageVmProvider(page: CommonPage): PageVmProvider<VM> {
     val pageId = rememberPageId()
     val lifecycleOwner = rememberComposeLifecycleOwner()
-    return remember { createPageVmProvider(page, pageId, lifecycleOwner) }
+    val host = LocalContext.current as ComponentActivity
+    return remember {
+        createPageVmProvider(
+            page = page,
+            pageId = pageId,
+            lifecycleOwner = lifecycleOwner,
+            host = host,
+        )
+    }
 }
 
 /**
@@ -99,12 +110,13 @@ fun <VM : Any> rememberPageVmProvider(page: CommonPage): PageVmProvider<VM> {
 internal fun <VM : Any> createPageVmProvider(
     page: CommonPage,
     pageId: String,
-    hostLifecycleOwner: LifecycleOwner,
+    host: ComponentActivity,
+    lifecycleOwner: LifecycleOwner,
     onHostDestroyed: (() -> Unit)? = null,
 ): PageVmProvider<VM> {
 
     val callerRegistry = SimpleResultLauncherRegistry()
-    val lifecycle = hostLifecycleOwner.lifecycle
+    val lifecycle = lifecycleOwner.lifecycle
 
     lifecycle.addObserver(object : DefaultLifecycleObserver {
         override fun onDestroy(owner: LifecycleOwner) {
@@ -123,13 +135,12 @@ internal fun <VM : Any> createPageVmProvider(
     val factory = store[pageClass] as? PageVmProvider.Factory<CommonPage>
     val vmProvider = factory?.create(
         page = page,
-        activity = hostLifecycleOwner as ComponentActivity,
+        activity = host,
         idProvider = idProvider,
         registry = callerRegistry,
-        lifecycleOwner = hostLifecycleOwner
+        lifecycleOwner = lifecycleOwner
     ) ?: error("No VM factory found for $pageClass")
 
     @Suppress("UNCHECKED_CAST")
     return vmProvider as PageVmProvider<VM>
 }
-

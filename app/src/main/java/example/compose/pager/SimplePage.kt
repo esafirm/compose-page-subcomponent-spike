@@ -17,6 +17,10 @@ class SimplePage(
     }
 }
 
+/* --------------------------------------------------- */
+/* > Provides Simple Page to the Scope */
+/* --------------------------------------------------- */
+
 @ContributesTo(AppScope::class)
 @Module
 class SimplePageModule {

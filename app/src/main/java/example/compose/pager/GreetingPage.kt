@@ -15,11 +15,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.squareup.anvil.annotations.ContributesBinding
 import com.squareup.anvil.annotations.ContributesTo
 import dagger.Module
 import dagger.Provides
-import example.compose.AppScope
 import example.compose.MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -42,8 +45,7 @@ class GreetingPage @Inject constructor(
 
     @Composable
     override fun Content() {
-        val vm = rememberHostLifecycleViewModel<GreetingViewModel>()
-        vm.greet()
+        val vm = rememberViewModel<GreetingViewModel>()
 
         Column(
             modifier = Modifier
@@ -89,6 +91,7 @@ class GreetingViewModel @Inject constructor(
 
     val searchFlow: StateFlow<String>,
 
+    lifecycle: Lifecycle,
     caller: ActivityResultCaller,
 ) {
 
@@ -99,9 +102,22 @@ class GreetingViewModel @Inject constructor(
 
     init {
         println("VM:: GreetingViewModel initiated")
+
+        lifecycle.addObserver(object : LifecycleEventObserver {
+            override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+                println("VM:: lifecycle state changed: $event")
+            }
+        })
+
+        scope.launch {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                // Greet will be invoked when the page is resumed
+                greet()
+            }
+        }
     }
 
-    fun greet() {
+    private fun greet() {
         displayer.displayGreeting(generator.generate())
     }
 
