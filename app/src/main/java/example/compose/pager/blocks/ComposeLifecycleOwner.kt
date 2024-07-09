@@ -25,6 +25,10 @@ fun rememberComposeLifecycleOwner(): ComposeLifecycleOwner {
         }
     }
 
+    // I'm thinking, customized composable lifecycle is probably something that we need,
+    // but I'm not sure it will be reliable as there is probably no way to provide a "full"
+    // lifecycle with for example onPause event. This makes me think that probably using
+    // fragment as a wrapper would still be a better choice given current situation.
     DisposableEffect(Unit) {
         lifecycleOwner.moveToState(Lifecycle.State.STARTED)
         lifecycleOwner.moveToState(Lifecycle.State.RESUMED)
