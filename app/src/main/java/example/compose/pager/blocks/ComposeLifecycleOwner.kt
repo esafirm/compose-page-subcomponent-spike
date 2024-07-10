@@ -2,35 +2,50 @@ package example.compose.pager.blocks
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
+import example.compose.pager.LocalPageInfo
 
 class ComposeLifecycleOwner : LifecycleOwner {
 
     private val lifecycleRegistry: LifecycleRegistry = LifecycleRegistry(this)
     override val lifecycle: Lifecycle = lifecycleRegistry
 
-    fun moveToState(state: Lifecycle.State) {
-        lifecycleRegistry.currentState = state
+    fun dispatchEvent(event: Lifecycle.Event) {
+        lifecycleRegistry.currentState = event.targetState
     }
 }
 
 @Composable
-fun rememberComposeLifecycleOwner(): ComposeLifecycleOwner {
-    val lifecycleOwner = remember {
+internal fun rememberComposeLifecycleOwner(): ComposeLifecycleOwner {
+    val pageInfo = LocalPageInfo.current
+
+    val owner = remember {
         ComposeLifecycleOwner().apply {
-            moveToState(Lifecycle.State.INITIALIZED)
+            dispatchEvent(Lifecycle.Event.ON_CREATE)
+        }
+    }
+
+    LaunchedEffect(pageInfo) {
+        val isVisible = pageInfo.isVisible
+        if (isVisible) {
+            owner.dispatchEvent(Lifecycle.Event.ON_RESUME)
+        } else {
+            // Not visible and previously visible
+            if (owner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                owner.dispatchEvent(Lifecycle.Event.ON_PAUSE)
+            }
         }
     }
 
     DisposableEffect(Unit) {
-        lifecycleOwner.moveToState(Lifecycle.State.RESUMED)
         onDispose {
-            lifecycleOwner.moveToState(Lifecycle.State.DESTROYED)
+            owner.dispatchEvent(Lifecycle.Event.ON_DESTROY)
         }
     }
 
-    return lifecycleOwner
+    return owner
 }

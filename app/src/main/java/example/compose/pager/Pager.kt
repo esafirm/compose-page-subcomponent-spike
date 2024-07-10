@@ -9,8 +9,19 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+
+data class PageInfo(val isVisible: Boolean = false)
+
+val LocalPageInfo = compositionLocalOf { PageInfo() }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -33,8 +44,14 @@ fun Pager(
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize(),
+            beyondBoundsPageCount = 1,
         ) { index ->
-            items[index].Content()
+            println("Pager:: lambda called with index: $index -- currentPage: ${pagerState.currentPage}")
+
+            val pageInfo = PageInfo(isVisible = pagerState.currentPage == index)
+            CompositionLocalProvider(LocalPageInfo provides pageInfo) {
+                items[index].Content()
+            }
         }
     }
 }
