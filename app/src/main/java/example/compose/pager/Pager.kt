@@ -10,12 +10,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
@@ -25,7 +20,7 @@ val LocalPageInfo = compositionLocalOf { PageInfo() }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun Pager(
+fun HorizontalPager(
     items: List<Page>,
     searchValue: String,
     onSearchQuery: (String) -> Unit,

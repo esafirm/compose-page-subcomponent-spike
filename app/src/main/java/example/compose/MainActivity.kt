@@ -7,7 +7,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.squareup.anvil.annotations.ContributesTo
 import example.compose.pager.Page
-import example.compose.pager.Pager
+import example.compose.pager.HorizontalPager
 import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 import javax.inject.Named
@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val searchValue by mainDependencies.searchFlow.collectAsState()
 
-            Pager(
+            HorizontalPager(
                 items = pages,
                 searchValue = searchValue,
                 onSearchQuery = { newQuery ->

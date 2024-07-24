@@ -5,7 +5,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import example.compose.AppComponentInstance
@@ -23,56 +22,11 @@ interface Page {
 
 abstract class CommonPage : Page {
 
-    // In this implementation VM lifecycle will match the `Page.Content`
-    // That means it will match the composable lifecycle
     @Composable
     protected fun <T : Any> rememberViewModel(): T {
         val pageVmProvider = rememberPageVmProvider<T>(this)
         return remember { pageVmProvider.getPageVm() }
     }
-
-    // In this implementation VM lifecycle will match the host
-    // But activity result caller will still function because we're using page id with `rememberSavable`
-    @Composable
-    protected fun <T : Any> rememberHostLifecycleViewModel(): T {
-        val lifecycleOwner = LocalLifecycleOwner.current
-        val pageId = rememberPageId()
-
-        return getOrCreatePageVm(
-            pageId = pageId,
-            hostLifecycleOwner = lifecycleOwner,
-            page = this,
-        )
-    }
-
-    /**
-     * A holder for [PageVmProvider] that will be created in [rememberHostLifecycleViewModel]
-     */
-    private var vmHolder: Any? = null
-
-    /**
-     * Get or create a [PageVmProvider] that has a lifecycle matching with host
-     */
-    private fun <VM : Any> getOrCreatePageVm(
-        page: CommonPage,
-        pageId: String,
-        hostLifecycleOwner: LifecycleOwner,
-    ): VM {
-        if (vmHolder == null) {
-            val pageVmProvider = createPageVmProvider<VM>(
-                page = page,
-                pageId = pageId,
-                host = hostLifecycleOwner as ComponentActivity,
-                lifecycleOwner = hostLifecycleOwner,
-            ) {
-                vmHolder = null
-            }
-            vmHolder = pageVmProvider.getPageVm()
-        }
-        @Suppress("UNCHECKED_CAST")
-        return vmHolder as VM
-    }
-
 }
 
 /**
@@ -89,7 +43,7 @@ fun rememberPageId(): String {
  * Remember a [PageVmProvider] that has a lifecycle matching with composable
  */
 @Composable
-fun <VM : Any> rememberPageVmProvider(page: CommonPage): PageVmProvider<VM> {
+internal fun <VM : Any> rememberPageVmProvider(page: CommonPage): PageVmProvider<VM> {
     val pageId = rememberPageId()
     val lifecycleOwner = rememberComposeLifecycleOwner()
     val host = LocalContext.current as ComponentActivity
